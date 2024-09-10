@@ -1,0 +1,1054 @@
+
+This is an object detectin system for theift it is trained on yolo dataset it can detect pistol ,Handgun and Rifel
+
+import os
+HOME = os.getcwd()
+print(HOME)
+     
+/content
+Install yolo v8
+
+
+!pip install ultralytics==8.0.20
+
+from IPython import display
+display.clear_output()
+
+import ultralytics
+ultralytics.checks()
+     
+Ultralytics YOLOv8.0.20 🚀 Python-3.10.12 torch-2.1.0+cu121 CUDA:0 (Tesla T4, 15102MiB)
+Setup complete ✅ (2 CPUs, 12.7 GB RAM, 26.8/78.2 GB disk)
+
+from ultralytics import YOLO
+
+from IPython.display import display, Image
+     
+Install dataset
+
+
+!mkdir {HOME}/datasets
+%cd {HOME}/datasets
+!pip install roboflow
+
+
+from roboflow import Roboflow
+rf = Roboflow(api_key="kD6bYOKgfzEtiVbi9bBp")
+project = rf.workspace("universidad-del-valle-de-mexico").project("thief-vision")
+dataset = project.version(1).download("yolov8")
+
+
+
+     
+mkdir: cannot create directory ‘/content/datasets’: File exists
+/content/datasets
+Requirement already satisfied: roboflow in /usr/local/lib/python3.10/dist-packages (1.1.16)
+Requirement already satisfied: certifi==2023.7.22 in /usr/local/lib/python3.10/dist-packages (from roboflow) (2023.7.22)
+Requirement already satisfied: chardet==4.0.0 in /usr/local/lib/python3.10/dist-packages (from roboflow) (4.0.0)
+Requirement already satisfied: cycler==0.10.0 in /usr/local/lib/python3.10/dist-packages (from roboflow) (0.10.0)
+Requirement already satisfied: idna==2.10 in /usr/local/lib/python3.10/dist-packages (from roboflow) (2.10)
+Requirement already satisfied: kiwisolver>=1.3.1 in /usr/local/lib/python3.10/dist-packages (from roboflow) (1.4.5)
+Requirement already satisfied: matplotlib in /usr/local/lib/python3.10/dist-packages (from roboflow) (3.7.1)
+Requirement already satisfied: numpy>=1.18.5 in /usr/local/lib/python3.10/dist-packages (from roboflow) (1.23.5)
+Requirement already satisfied: opencv-python-headless==4.8.0.74 in /usr/local/lib/python3.10/dist-packages (from roboflow) (4.8.0.74)
+Requirement already satisfied: Pillow>=7.1.2 in /usr/local/lib/python3.10/dist-packages (from roboflow) (9.4.0)
+Requirement already satisfied: python-dateutil in /usr/local/lib/python3.10/dist-packages (from roboflow) (2.8.2)
+Requirement already satisfied: python-dotenv in /usr/local/lib/python3.10/dist-packages (from roboflow) (1.0.0)
+Requirement already satisfied: requests in /usr/local/lib/python3.10/dist-packages (from roboflow) (2.31.0)
+Requirement already satisfied: six in /usr/local/lib/python3.10/dist-packages (from roboflow) (1.16.0)
+Requirement already satisfied: supervision in /usr/local/lib/python3.10/dist-packages (from roboflow) (0.17.1)
+Requirement already satisfied: urllib3>=1.26.6 in /usr/local/lib/python3.10/dist-packages (from roboflow) (2.0.7)
+Requirement already satisfied: tqdm>=4.41.0 in /usr/local/lib/python3.10/dist-packages (from roboflow) (4.66.1)
+Requirement already satisfied: PyYAML>=5.3.1 in /usr/local/lib/python3.10/dist-packages (from roboflow) (6.0.1)
+Requirement already satisfied: requests-toolbelt in /usr/local/lib/python3.10/dist-packages (from roboflow) (1.0.0)
+Requirement already satisfied: python-magic in /usr/local/lib/python3.10/dist-packages (from roboflow) (0.4.27)
+Requirement already satisfied: contourpy>=1.0.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib->roboflow) (1.2.0)
+Requirement already satisfied: fonttools>=4.22.0 in /usr/local/lib/python3.10/dist-packages (from matplotlib->roboflow) (4.47.0)
+Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.10/dist-packages (from matplotlib->roboflow) (23.2)
+Requirement already satisfied: pyparsing>=2.3.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib->roboflow) (3.1.1)
+Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.10/dist-packages (from requests->roboflow) (3.3.2)
+Requirement already satisfied: scipy>=1.9.0 in /usr/local/lib/python3.10/dist-packages (from supervision->roboflow) (1.11.4)
+loading Roboflow workspace...
+loading Roboflow project...
+Dependency ultralytics==8.0.196 is required but found version=8.0.20, to fix: `pip install ultralytics==8.0.196`
+Downloading Dataset Version Zip in Thief-vision--1 to yolov8:: 100%|██████████| 12672/12672 [00:00<00:00, 30617.60it/s]
+Extracting Dataset Version Zip to Thief-vision--1 in yolov8:: 100%|██████████| 414/414 [00:00<00:00, 4265.90it/s]
+Train Model
+
+
+%cd {HOME}
+!yolo task=detect mode=train model=yolov8s.pt data={dataset.location}/data.yaml epochs=35 batch = 16 imgsz=1280 plots=True
+     
+/content
+Ultralytics YOLOv8.0.20 🚀 Python-3.10.12 torch-2.1.0+cu121 CUDA:0 (Tesla T4, 15102MiB)
+yolo/engine/trainer: task=detect, mode=train, model=yolov8s.yaml, data=/content/datasets/Thief-vision--1/data.yaml, epochs=35, patience=50, batch=16, imgsz=1280, save=True, cache=False, device=, workers=8, project=None, name=None, exist_ok=False, pretrained=False, optimizer=SGD, verbose=True, seed=0, deterministic=True, single_cls=False, image_weights=False, rect=False, cos_lr=False, close_mosaic=10, resume=False, overlap_mask=True, mask_ratio=4, dropout=False, val=True, save_json=False, save_hybrid=False, conf=0.001, iou=0.7, max_det=300, half=False, dnn=False, plots=True, source=ultralytics/assets/, show=False, save_txt=False, save_conf=False, save_crop=False, hide_labels=False, hide_conf=False, vid_stride=1, line_thickness=3, visualize=False, augment=False, agnostic_nms=False, classes=None, retina_masks=False, boxes=True, format=torchscript, keras=False, optimize=False, int8=False, dynamic=False, simplify=False, opset=17, workspace=4, nms=False, lr0=0.01, lrf=0.01, momentum=0.937, weight_decay=0.001, warmup_epochs=3.0, warmup_momentum=0.8, warmup_bias_lr=0.1, box=7.5, cls=0.5, dfl=1.5, fl_gamma=0.0, label_smoothing=0.0, nbs=64, hsv_h=0.015, hsv_s=0.7, hsv_v=0.4, degrees=0.0, translate=0.1, scale=0.5, shear=0.0, perspective=0.0, flipud=0.0, fliplr=0.5, mosaic=1.0, mixup=0.0, copy_paste=0.0, cfg=None, v5loader=False, save_dir=runs/detect/train5
+2024-01-10 18:22:11.696285: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2024-01-10 18:22:11.696347: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2024-01-10 18:22:11.698310: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2024-01-10 18:22:13.884937: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+Overriding model.yaml nc=80 with nc=3
+
+                   from  n    params  module                                       arguments                     
+  0                  -1  1       928  ultralytics.nn.modules.Conv                  [3, 32, 3, 2]                 
+  1                  -1  1     18560  ultralytics.nn.modules.Conv                  [32, 64, 3, 2]                
+  2                  -1  1     29056  ultralytics.nn.modules.C2f                   [64, 64, 1, True]             
+  3                  -1  1     73984  ultralytics.nn.modules.Conv                  [64, 128, 3, 2]               
+  4                  -1  2    197632  ultralytics.nn.modules.C2f                   [128, 128, 2, True]           
+  5                  -1  1    295424  ultralytics.nn.modules.Conv                  [128, 256, 3, 2]              
+  6                  -1  2    788480  ultralytics.nn.modules.C2f                   [256, 256, 2, True]           
+  7                  -1  1   1180672  ultralytics.nn.modules.Conv                  [256, 512, 3, 2]              
+  8                  -1  1   1838080  ultralytics.nn.modules.C2f                   [512, 512, 1, True]           
+  9                  -1  1    656896  ultralytics.nn.modules.SPPF                  [512, 512, 5]                 
+ 10                  -1  1         0  torch.nn.modules.upsampling.Upsample         [None, 2, 'nearest']          
+ 11             [-1, 6]  1         0  ultralytics.nn.modules.Concat                [1]                           
+ 12                  -1  1    591360  ultralytics.nn.modules.C2f                   [768, 256, 1]                 
+ 13                  -1  1         0  torch.nn.modules.upsampling.Upsample         [None, 2, 'nearest']          
+ 14             [-1, 4]  1         0  ultralytics.nn.modules.Concat                [1]                           
+ 15                  -1  1    148224  ultralytics.nn.modules.C2f                   [384, 128, 1]                 
+ 16                  -1  1    147712  ultralytics.nn.modules.Conv                  [128, 128, 3, 2]              
+ 17            [-1, 12]  1         0  ultralytics.nn.modules.Concat                [1]                           
+ 18                  -1  1    493056  ultralytics.nn.modules.C2f                   [384, 256, 1]                 
+ 19                  -1  1    590336  ultralytics.nn.modules.Conv                  [256, 256, 3, 2]              
+ 20             [-1, 9]  1         0  ultralytics.nn.modules.Concat                [1]                           
+ 21                  -1  1   1969152  ultralytics.nn.modules.C2f                   [768, 512, 1]                 
+ 22        [15, 18, 21]  1   2117209  ultralytics.nn.modules.Detect                [3, [128, 256, 512]]          
+Model summary: 225 layers, 11136761 parameters, 11136745 gradients, 28.7 GFLOPs
+
+Transferred 349/355 items from pretrained weights
+optimizer: SGD(lr=0.01) with parameter groups 57 weight(decay=0.0), 64 weight(decay=0.001), 63 bias
+train: Scanning /content/datasets/Thief-vision--1/train/labels.cache... 140 images, 0 backgrounds, 0 corrupt: 100% 140/140 [00:00<?, ?it/s]
+albumentations: Blur(p=0.01, blur_limit=(3, 7)), MedianBlur(p=0.01, blur_limit=(3, 7)), ToGray(p=0.01), CLAHE(p=0.01, clip_limit=(1, 4.0), tile_grid_size=(8, 8))
+val: Scanning /content/datasets/Thief-vision--1/valid/labels.cache... 40 images, 0 backgrounds, 0 corrupt: 100% 40/40 [00:00<?, ?it/s]
+WARNING ⚠️ Box and segment counts should be equal, but got len(segments) = 1, len(boxes) = 40. To resolve this only boxes will be used and all segments will be removed. To avoid this please supply either a detect or segment dataset, not a detect-segment mixed dataset.
+Image sizes 1280 train, 1280 val
+Using 2 dataloader workers
+Logging results to runs/detect/train5
+Starting training for 35 epochs...
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+       1/35      15.1G      3.084      21.52       2.66         22       1280: 100% 9/9 [00:21<00:00,  2.33s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:03<00:00,  1.84s/it]
+                   all         40         40          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+       2/35      14.6G      3.061      11.82      2.604         22       1280: 100% 9/9 [00:16<00:00,  1.85s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:02<00:00,  1.20s/it]
+                   all         40         40   0.000251    0.00901   0.000131   1.31e-05
+               Handgun         40         37   0.000752      0.027   0.000392   3.92e-05
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+       3/35      14.6G      2.891      5.357       2.51         20       1280: 100% 9/9 [00:16<00:00,  1.87s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.07it/s]
+                   all         40         40    0.00154     0.0991    0.00106    0.00018
+               Handgun         40         37    0.00463      0.297    0.00318   0.000541
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+       4/35      14.6G      2.736      4.225      2.415         18       1280: 100% 9/9 [00:16<00:00,  1.82s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:02<00:00,  1.04s/it]
+                   all         40         40    0.00159      0.495    0.00401   0.000666
+               Handgun         40         37    0.00441      0.486     0.0116    0.00195
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2   0.000363          1    0.00048    4.8e-05
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+       5/35      14.6G      2.449      3.587      2.088         18       1280: 100% 9/9 [00:16<00:00,  1.78s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.06it/s]
+                   all         40         40      0.734      0.108     0.0535     0.0125
+               Handgun         40         37      0.201      0.324       0.16     0.0375
+                Pistol         40          1          1          0          0          0
+                 Rifle         40          2          1          0   0.000159   1.59e-05
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+       6/35      14.6G      2.156       3.09      2.015         17       1280: 100% 9/9 [00:16<00:00,  1.79s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.06it/s]
+                   all         40         40      0.481     0.0631     0.0751     0.0229
+               Handgun         40         37      0.443      0.189      0.225     0.0686
+                Pistol         40          1          1          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+       7/35      14.6G       2.13      2.731      1.988         24       1280: 100% 9/9 [00:17<00:00,  1.91s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:02<00:00,  1.09s/it]
+                   all         40         40        0.2      0.108      0.107     0.0324
+               Handgun         40         37        0.6      0.324      0.321     0.0972
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+       8/35      14.6G      2.128      2.467      1.842         17       1280: 100% 9/9 [00:17<00:00,  1.99s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.07it/s]
+                   all         40         40      0.014      0.171     0.0668     0.0222
+               Handgun         40         37      0.042      0.514        0.2     0.0665
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+       9/35      14.6G      1.893      2.728       1.71         15       1280: 100% 9/9 [00:16<00:00,  1.86s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:02<00:00,  1.27s/it]
+                   all         40         40        0.3     0.0802     0.0917     0.0322
+               Handgun         40         37      0.899      0.241      0.275     0.0966
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      10/35      14.6G      1.946      2.485      1.803         16       1280: 100% 9/9 [00:16<00:00,  1.81s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:02<00:00,  1.05s/it]
+                   all         40         40      0.179     0.0901     0.0904     0.0417
+               Handgun         40         37      0.537       0.27      0.271      0.125
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      11/35      14.7G      1.917       2.53      1.785         17       1280: 100% 9/9 [00:15<00:00,  1.77s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.03it/s]
+                   all         40         40      0.206     0.0901      0.105     0.0474
+               Handgun         40         37      0.619       0.27      0.315      0.142
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      12/35      14.7G      1.897      2.413      1.578         17       1280: 100% 9/9 [00:16<00:00,  1.85s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.07it/s]
+                   all         40         40       0.11     0.0721     0.0705     0.0292
+               Handgun         40         37      0.331      0.216      0.211     0.0875
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      13/35      14.7G      1.898      2.152      1.557         15       1280: 100% 9/9 [00:16<00:00,  1.80s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.03it/s]
+                   all         40         40     0.0431      0.045     0.0187    0.00791
+               Handgun         40         37      0.129      0.135      0.056     0.0237
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      14/35      14.7G      1.893      2.076      1.578         14       1280: 100% 9/9 [00:16<00:00,  1.85s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:02<00:00,  1.21s/it]
+                   all         40         40     0.0841      0.018     0.0116    0.00509
+               Handgun         40         37      0.252     0.0541     0.0349     0.0153
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      15/35      14.7G      1.871      2.004      1.521         19       1280: 100% 9/9 [00:15<00:00,  1.78s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.05it/s]
+                   all         40         40     0.0521      0.018     0.0154     0.0069
+               Handgun         40         37      0.156     0.0541     0.0461     0.0207
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      16/35      14.7G      1.852       1.91      1.547         14       1280: 100% 9/9 [00:16<00:00,  1.83s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.07it/s]
+                   all         40         40     0.0505      0.045     0.0453     0.0158
+               Handgun         40         37      0.151      0.135      0.135     0.0474
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0   0.000749   7.49e-05
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      17/35      14.7G      1.917      1.823      1.558         19       1280: 100% 9/9 [00:16<00:00,  1.88s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:02<00:00,  1.04s/it]
+                   all         40         40      0.123     0.0541     0.0749     0.0285
+               Handgun         40         37      0.369      0.162      0.224     0.0855
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0   0.000465   4.65e-05
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      18/35      14.7G      1.716      1.617       1.44         23       1280: 100% 9/9 [00:16<00:00,  1.79s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.06it/s]
+                   all         40         40      0.194      0.135       0.16     0.0535
+               Handgun         40         37      0.581      0.405      0.481      0.161
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      19/35      14.7G      1.713      1.352      1.459         18       1280: 100% 9/9 [00:16<00:00,  1.79s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:02<00:00,  1.01s/it]
+                   all         40         40      0.302      0.117      0.165     0.0553
+               Handgun         40         37      0.905      0.351      0.496      0.166
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      20/35      14.7G      1.648      1.369      1.389         15       1280: 100% 9/9 [00:16<00:00,  1.82s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.05it/s]
+                   all         40         40      0.182      0.126      0.137     0.0377
+               Handgun         40         37      0.547      0.378       0.41      0.113
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      21/35      14.7G       1.67      1.295      1.401         32       1280: 100% 9/9 [00:17<00:00,  1.95s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.04it/s]
+                   all         40         40      0.217      0.144      0.141     0.0409
+               Handgun         40         37      0.651      0.432      0.424      0.123
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      22/35      14.7G      1.635      1.395      1.419         20       1280: 100% 9/9 [00:16<00:00,  1.86s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:02<00:00,  1.16s/it]
+                   all         40         40      0.526      0.117      0.131     0.0431
+               Handgun         40         37      0.579      0.351      0.394      0.129
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          1          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      23/35      14.7G      1.697      1.282      1.438         17       1280: 100% 9/9 [00:16<00:00,  1.84s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.04it/s]
+                   all         40         40      0.232      0.144      0.175     0.0545
+               Handgun         40         37      0.696      0.432      0.526      0.164
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      24/35      14.7G       1.57      1.192      1.369         13       1280: 100% 9/9 [00:16<00:00,  1.81s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:02<00:00,  1.05s/it]
+                   all         40         40      0.175      0.126      0.148     0.0429
+               Handgun         40         37      0.526      0.378      0.445      0.129
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      25/35      14.7G      1.739      1.148      1.414         18       1280: 100% 9/9 [00:15<00:00,  1.77s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.05it/s]
+                   all         40         40      0.568      0.153      0.171     0.0656
+               Handgun         40         37      0.704      0.459      0.514      0.197
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          1          0          0          0
+Closing dataloader mosaic
+albumentations: Blur(p=0.01, blur_limit=(3, 7)), MedianBlur(p=0.01, blur_limit=(3, 7)), ToGray(p=0.01), CLAHE(p=0.01, clip_limit=(1, 4.0), tile_grid_size=(8, 8))
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      26/35      14.7G      1.689      1.274      1.458         12       1280: 100% 9/9 [00:15<00:00,  1.69s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.05it/s]
+                   all         40         40      0.633      0.189      0.204     0.0768
+               Handgun         40         37        0.9      0.568      0.612      0.231
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          1          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      27/35      14.7G      1.659       1.16      1.413         11       1280: 100% 9/9 [00:12<00:00,  1.43s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.04it/s]
+                   all         40         40      0.592      0.189      0.202     0.0813
+               Handgun         40         37      0.777      0.568      0.607      0.244
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          1          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      28/35      14.7G      1.554      1.072      1.378         13       1280: 100% 9/9 [00:12<00:00,  1.41s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:02<00:00,  1.00s/it]
+                   all         40         40      0.636      0.181      0.213     0.0887
+               Handgun         40         37      0.909      0.542      0.639      0.266
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          1          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      29/35      14.7G      1.554     0.9614      1.372         11       1280: 100% 9/9 [00:12<00:00,  1.35s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:02<00:00,  1.17s/it]
+                   all         40         40      0.265      0.189      0.204     0.0919
+               Handgun         40         37      0.795      0.568      0.611      0.276
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      30/35      14.7G      1.512       0.98      1.341         13       1280: 100% 9/9 [00:11<00:00,  1.28s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:02<00:00,  1.10s/it]
+                   all         40         40      0.312      0.171      0.208     0.0889
+               Handgun         40         37      0.937      0.514      0.625      0.267
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      31/35      14.6G      1.498     0.9034      1.349         11       1280: 100% 9/9 [00:12<00:00,  1.36s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.07it/s]
+                   all         40         40      0.658      0.171      0.208     0.0892
+               Handgun         40         37      0.975      0.514      0.625      0.268
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          1          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      32/35      14.6G      1.495      0.874      1.344         14       1280: 100% 9/9 [00:12<00:00,  1.36s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.05it/s]
+                   all         40         40      0.663       0.18      0.217     0.0871
+               Handgun         40         37      0.988      0.541      0.652      0.261
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          1          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      33/35      14.6G      1.406     0.8225      1.278         13       1280: 100% 9/9 [00:12<00:00,  1.34s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.04it/s]
+                   all         40         40      0.661      0.171      0.216     0.0884
+               Handgun         40         37      0.984      0.514      0.649      0.265
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          1          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      34/35      14.6G      1.477     0.8716      1.323         10       1280: 100% 9/9 [00:12<00:00,  1.35s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:01<00:00,  1.07it/s]
+                   all         40         40      0.623      0.189      0.219     0.0885
+               Handgun         40         37      0.868      0.568      0.657      0.265
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          1          0          0          0
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+      35/35      14.6G      1.411       0.85      1.301         12       1280: 100% 9/9 [00:12<00:00,  1.42s/it]
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:02<00:00,  1.08s/it]
+                   all         40         40      0.631       0.18      0.216     0.0849
+               Handgun         40         37      0.894      0.541      0.649      0.255
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          1          0          0          0
+
+35 epochs completed in 0.182 hours.
+Optimizer stripped from runs/detect/train5/weights/last.pt, 22.7MB
+Optimizer stripped from runs/detect/train5/weights/best.pt, 22.7MB
+
+Validating runs/detect/train5/weights/best.pt...
+Ultralytics YOLOv8.0.20 🚀 Python-3.10.12 torch-2.1.0+cu121 CUDA:0 (Tesla T4, 15102MiB)
+Model summary (fused): 168 layers, 11126745 parameters, 0 gradients, 28.4 GFLOPs
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 2/2 [00:02<00:00,  1.06s/it]
+                   all         40         40      0.265      0.189      0.204     0.0919
+               Handgun         40         37      0.794      0.568      0.612      0.276
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+Speed: 0.8ms pre-process, 18.6ms inference, 0.0ms loss, 1.5ms post-process per image
+Results saved to runs/detect/train5
+
+!ls {HOME}/runs/detect/train5/
+     
+args.yaml					    results.csv		train_batch2.jpg
+confusion_matrix.png				    results.png		val_batch0_labels.jpg
+events.out.tfevents.1704910935.78ed74825e01.4619.0  train_batch0.jpg	val_batch0_pred.jpg
+F1_curve.png					    train_batch1.jpg	val_batch1_labels.jpg
+P_curve.png					    train_batch225.jpg	val_batch1_pred.jpg
+PR_curve.png					    train_batch226.jpg	weights
+R_curve.png					    train_batch227.jpg
+
+%cd {HOME}
+Image(filename=f'{HOME}/runs/detect/train5/results.png', width=600)#plot graph
+     
+/content
+
+Validation
+
+
+%cd {HOME}
+
+!yolo task=detect mode=val model={HOME}/runs/detect/train5/weights/best.pt data={dataset.location}/data.yaml
+     
+/content
+2024-01-10 18:36:15.199807: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2024-01-10 18:36:15.199856: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2024-01-10 18:36:15.201167: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2024-01-10 18:36:16.420227: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+Ultralytics YOLOv8.0.20 🚀 Python-3.10.12 torch-2.1.0+cu121 CUDA:0 (Tesla T4, 15102MiB)
+Model summary (fused): 168 layers, 11126745 parameters, 0 gradients, 28.4 GFLOPs
+val: Scanning /content/datasets/Thief-vision--1/valid/labels.cache... 40 images, 0 backgrounds, 0 corrupt: 100% 40/40 [00:00<?, ?it/s]
+WARNING ⚠️ Box and segment counts should be equal, but got len(segments) = 1, len(boxes) = 40. To resolve this only boxes will be used and all segments will be removed. To avoid this please supply either a detect or segment dataset, not a detect-segment mixed dataset.
+                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% 3/3 [00:04<00:00,  1.63s/it]
+                   all         40         40      0.265      0.189      0.204     0.0925
+               Handgun         40         37      0.795      0.568      0.613      0.278
+                Pistol         40          1          0          0          0          0
+                 Rifle         40          2          0          0          0          0
+Speed: 29.0ms pre-process, 34.9ms inference, 0.0ms loss, 19.5ms post-process per image
+
+%cd {HOME}
+!yolo task=detect mode=predict model={HOME}/runs/detect/train5/weights/best.pt conf=0.25 source="v2.mp4" save=True #test take a vedio input and cut it into frames and detect oblects
+     
+/content
+2024-01-10 18:37:06.623719: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2024-01-10 18:37:06.623771: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2024-01-10 18:37:06.625015: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2024-01-10 18:37:07.660884: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+Ultralytics YOLOv8.0.20 🚀 Python-3.10.12 torch-2.1.0+cu121 CUDA:0 (Tesla T4, 15102MiB)
+Model summary (fused): 168 layers, 11126745 parameters, 0 gradients, 28.4 GFLOPs
+video 1/1 (1/574) /content/v2.mp4: 736x1280 65.1ms
+video 1/1 (2/574) /content/v2.mp4: 736x1280 29.4ms
+video 1/1 (3/574) /content/v2.mp4: 736x1280 29.3ms
+video 1/1 (4/574) /content/v2.mp4: 736x1280 29.3ms
+video 1/1 (5/574) /content/v2.mp4: 736x1280 29.3ms
+video 1/1 (6/574) /content/v2.mp4: 736x1280 29.3ms
+video 1/1 (7/574) /content/v2.mp4: 736x1280 19.1ms
+video 1/1 (8/574) /content/v2.mp4: 736x1280 18.5ms
+video 1/1 (9/574) /content/v2.mp4: 736x1280 18.6ms
+video 1/1 (10/574) /content/v2.mp4: 736x1280 18.6ms
+video 1/1 (11/574) /content/v2.mp4: 736x1280 18.2ms
+video 1/1 (12/574) /content/v2.mp4: 736x1280 18.2ms
+video 1/1 (13/574) /content/v2.mp4: 736x1280 18.2ms
+video 1/1 (14/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (15/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (16/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (17/574) /content/v2.mp4: 736x1280 15.1ms
+video 1/1 (18/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (19/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (20/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (21/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (22/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (23/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (24/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (25/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (26/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (27/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (28/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (29/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (30/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (31/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (32/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (33/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (34/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (35/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (36/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (37/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (38/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (39/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (40/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (41/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (42/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (43/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (44/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (45/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (46/574) /content/v2.mp4: 736x1280 15.1ms
+video 1/1 (47/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (48/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (49/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (50/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (51/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (52/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (53/574) /content/v2.mp4: 736x1280 15.1ms
+video 1/1 (54/574) /content/v2.mp4: 736x1280 1 Rifle, 15.8ms
+video 1/1 (55/574) /content/v2.mp4: 736x1280 1 Rifle, 14.8ms
+video 1/1 (56/574) /content/v2.mp4: 736x1280 14.7ms
+video 1/1 (57/574) /content/v2.mp4: 736x1280 15.1ms
+video 1/1 (58/574) /content/v2.mp4: 736x1280 1 Rifle, 16.2ms
+video 1/1 (59/574) /content/v2.mp4: 736x1280 1 Rifle, 16.3ms
+video 1/1 (60/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (61/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (62/574) /content/v2.mp4: 736x1280 1 Handgun, 16.1ms
+video 1/1 (63/574) /content/v2.mp4: 736x1280 1 Handgun, 15.2ms
+video 1/1 (64/574) /content/v2.mp4: 736x1280 1 Handgun, 1 Rifle, 15.7ms
+video 1/1 (65/574) /content/v2.mp4: 736x1280 1 Handgun, 1 Rifle, 15.5ms
+video 1/1 (66/574) /content/v2.mp4: 736x1280 15.1ms
+video 1/1 (67/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (68/574) /content/v2.mp4: 736x1280 1 Handgun, 16.2ms
+video 1/1 (69/574) /content/v2.mp4: 736x1280 1 Handgun, 15.3ms
+video 1/1 (70/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (71/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (72/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (73/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (74/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (75/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (76/574) /content/v2.mp4: 736x1280 1 Rifle, 15.3ms
+video 1/1 (77/574) /content/v2.mp4: 736x1280 1 Rifle, 15.7ms
+video 1/1 (78/574) /content/v2.mp4: 736x1280 1 Rifle, 15.8ms
+video 1/1 (79/574) /content/v2.mp4: 736x1280 1 Rifle, 15.3ms
+video 1/1 (80/574) /content/v2.mp4: 736x1280 1 Handgun, 1 Rifle, 16.1ms
+video 1/1 (81/574) /content/v2.mp4: 736x1280 1 Handgun, 1 Rifle, 15.4ms
+video 1/1 (82/574) /content/v2.mp4: 736x1280 1 Handgun, 1 Rifle, 15.6ms
+video 1/1 (83/574) /content/v2.mp4: 736x1280 1 Handgun, 1 Rifle, 15.2ms
+video 1/1 (84/574) /content/v2.mp4: 736x1280 1 Rifle, 16.0ms
+video 1/1 (85/574) /content/v2.mp4: 736x1280 1 Rifle, 19.2ms
+video 1/1 (86/574) /content/v2.mp4: 736x1280 14.9ms
+video 1/1 (87/574) /content/v2.mp4: 736x1280 14.9ms
+video 1/1 (88/574) /content/v2.mp4: 736x1280 15.1ms
+video 1/1 (89/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (90/574) /content/v2.mp4: 736x1280 15.1ms
+video 1/1 (91/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (92/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (93/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (94/574) /content/v2.mp4: 736x1280 1 Rifle, 15.1ms
+video 1/1 (95/574) /content/v2.mp4: 736x1280 1 Rifle, 15.8ms
+video 1/1 (96/574) /content/v2.mp4: 736x1280 1 Rifle, 15.3ms
+video 1/1 (97/574) /content/v2.mp4: 736x1280 1 Rifle, 16.3ms
+video 1/1 (98/574) /content/v2.mp4: 736x1280 1 Handgun, 1 Rifle, 15.2ms
+video 1/1 (99/574) /content/v2.mp4: 736x1280 1 Handgun, 1 Rifle, 14.9ms
+video 1/1 (100/574) /content/v2.mp4: 736x1280 1 Handgun, 1 Rifle, 15.2ms
+video 1/1 (101/574) /content/v2.mp4: 736x1280 1 Handgun, 1 Rifle, 15.3ms
+video 1/1 (102/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (103/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (104/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (105/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (106/574) /content/v2.mp4: 736x1280 1 Rifle, 15.1ms
+video 1/1 (107/574) /content/v2.mp4: 736x1280 1 Rifle, 15.2ms
+video 1/1 (108/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (109/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (110/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (111/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (112/574) /content/v2.mp4: 736x1280 1 Rifle, 15.0ms
+video 1/1 (113/574) /content/v2.mp4: 736x1280 1 Rifle, 16.2ms
+video 1/1 (114/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (115/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (116/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (117/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (118/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (119/574) /content/v2.mp4: 736x1280 15.1ms
+video 1/1 (120/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (121/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (122/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (123/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (124/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (125/574) /content/v2.mp4: 736x1280 14.9ms
+video 1/1 (126/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (127/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (128/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (129/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (130/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (131/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (132/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (133/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (134/574) /content/v2.mp4: 736x1280 17.1ms
+video 1/1 (135/574) /content/v2.mp4: 736x1280 15.1ms
+video 1/1 (136/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (137/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (138/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (139/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (140/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (141/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (142/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (143/574) /content/v2.mp4: 736x1280 14.9ms
+video 1/1 (144/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (145/574) /content/v2.mp4: 736x1280 15.0ms
+video 1/1 (146/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (147/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (148/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (149/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (150/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (151/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (152/574) /content/v2.mp4: 736x1280 18.4ms
+video 1/1 (153/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (154/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (155/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (156/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (157/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (158/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (159/574) /content/v2.mp4: 736x1280 15.0ms
+video 1/1 (160/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (161/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (162/574) /content/v2.mp4: 736x1280 1 Handgun, 16.4ms
+video 1/1 (163/574) /content/v2.mp4: 736x1280 1 Handgun, 15.0ms
+video 1/1 (164/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (165/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (166/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (167/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (168/574) /content/v2.mp4: 736x1280 1 Handgun, 15.0ms
+video 1/1 (169/574) /content/v2.mp4: 736x1280 1 Handgun, 14.9ms
+video 1/1 (170/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (171/574) /content/v2.mp4: 736x1280 16.8ms
+video 1/1 (172/574) /content/v2.mp4: 736x1280 1 Handgun, 15.8ms
+video 1/1 (173/574) /content/v2.mp4: 736x1280 1 Handgun, 15.3ms
+video 1/1 (174/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (175/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (176/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (177/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (178/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (179/574) /content/v2.mp4: 736x1280 15.1ms
+video 1/1 (180/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (181/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (182/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (183/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (184/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (185/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (186/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (187/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (188/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (189/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (190/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (191/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (192/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (193/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (194/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (195/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (196/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (197/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (198/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (199/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (200/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (201/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (202/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (203/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (204/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (205/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (206/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (207/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (208/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (209/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (210/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (211/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (212/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (213/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (214/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (215/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (216/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (217/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (218/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (219/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (220/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (221/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (222/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (223/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (224/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (225/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (226/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (227/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (228/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (229/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (230/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (231/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (232/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (233/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (234/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (235/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (236/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (237/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (238/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (239/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (240/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (241/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (242/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (243/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (244/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (245/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (246/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (247/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (248/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (249/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (250/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (251/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (252/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (253/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (254/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (255/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (256/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (257/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (258/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (259/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (260/574) /content/v2.mp4: 736x1280 16.8ms
+video 1/1 (261/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (262/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (263/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (264/574) /content/v2.mp4: 736x1280 16.8ms
+video 1/1 (265/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (266/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (267/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (268/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (269/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (270/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (271/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (272/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (273/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (274/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (275/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (276/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (277/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (278/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (279/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (280/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (281/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (282/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (283/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (284/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (285/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (286/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (287/574) /content/v2.mp4: 736x1280 16.8ms
+video 1/1 (288/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (289/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (290/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (291/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (292/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (293/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (294/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (295/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (296/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (297/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (298/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (299/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (300/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (301/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (302/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (303/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (304/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (305/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (306/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (307/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (308/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (309/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (310/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (311/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (312/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (313/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (314/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (315/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (316/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (317/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (318/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (319/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (320/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (321/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (322/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (323/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (324/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (325/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (326/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (327/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (328/574) /content/v2.mp4: 736x1280 19.2ms
+video 1/1 (329/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (330/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (331/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (332/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (333/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (334/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (335/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (336/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (337/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (338/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (339/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (340/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (341/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (342/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (343/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (344/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (345/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (346/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (347/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (348/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (349/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (350/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (351/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (352/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (353/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (354/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (355/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (356/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (357/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (358/574) /content/v2.mp4: 736x1280 17.0ms
+video 1/1 (359/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (360/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (361/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (362/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (363/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (364/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (365/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (366/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (367/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (368/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (369/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (370/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (371/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (372/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (373/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (374/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (375/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (376/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (377/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (378/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (379/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (380/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (381/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (382/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (383/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (384/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (385/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (386/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (387/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (388/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (389/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (390/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (391/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (392/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (393/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (394/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (395/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (396/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (397/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (398/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (399/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (400/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (401/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (402/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (403/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (404/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (405/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (406/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (407/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (408/574) /content/v2.mp4: 736x1280 16.9ms
+video 1/1 (409/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (410/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (411/574) /content/v2.mp4: 736x1280 16.9ms
+video 1/1 (412/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (413/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (414/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (415/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (416/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (417/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (418/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (419/574) /content/v2.mp4: 736x1280 16.9ms
+video 1/1 (420/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (421/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (422/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (423/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (424/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (425/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (426/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (427/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (428/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (429/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (430/574) /content/v2.mp4: 736x1280 16.8ms
+video 1/1 (431/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (432/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (433/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (434/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (435/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (436/574) /content/v2.mp4: 736x1280 16.9ms
+video 1/1 (437/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (438/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (439/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (440/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (441/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (442/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (443/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (444/574) /content/v2.mp4: 736x1280 17.1ms
+video 1/1 (445/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (446/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (447/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (448/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (449/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (450/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (451/574) /content/v2.mp4: 736x1280 17.3ms
+video 1/1 (452/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (453/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (454/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (455/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (456/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (457/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (458/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (459/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (460/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (461/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (462/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (463/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (464/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (465/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (466/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (467/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (468/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (469/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (470/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (471/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (472/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (473/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (474/574) /content/v2.mp4: 736x1280 16.8ms
+video 1/1 (475/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (476/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (477/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (478/574) /content/v2.mp4: 736x1280 16.9ms
+video 1/1 (479/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (480/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (481/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (482/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (483/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (484/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (485/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (486/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (487/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (488/574) /content/v2.mp4: 736x1280 16.9ms
+video 1/1 (489/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (490/574) /content/v2.mp4: 736x1280 15.4ms
+video 1/1 (491/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (492/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (493/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (494/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (495/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (496/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (497/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (498/574) /content/v2.mp4: 736x1280 16.8ms
+video 1/1 (499/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (500/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (501/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (502/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (503/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (504/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (505/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (506/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (507/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (508/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (509/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (510/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (511/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (512/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (513/574) /content/v2.mp4: 736x1280 16.9ms
+video 1/1 (514/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (515/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (516/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (517/574) /content/v2.mp4: 736x1280 16.9ms
+video 1/1 (518/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (519/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (520/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (521/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (522/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (523/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (524/574) /content/v2.mp4: 736x1280 16.4ms
+video 1/1 (525/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (526/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (527/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (528/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (529/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (530/574) /content/v2.mp4: 736x1280 16.0ms
+video 1/1 (531/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (532/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (533/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (534/574) /content/v2.mp4: 736x1280 16.7ms
+video 1/1 (535/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (536/574) /content/v2.mp4: 736x1280 15.8ms
+video 1/1 (537/574) /content/v2.mp4: 736x1280 16.8ms
+video 1/1 (538/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (539/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (540/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (541/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (542/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (543/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (544/574) /content/v2.mp4: 736x1280 16.2ms
+video 1/1 (545/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (546/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (547/574) /content/v2.mp4: 736x1280 16.9ms
+video 1/1 (548/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (549/574) /content/v2.mp4: 736x1280 15.6ms
+video 1/1 (550/574) /content/v2.mp4: 736x1280 15.9ms
+video 1/1 (551/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (552/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (553/574) /content/v2.mp4: 736x1280 16.5ms
+video 1/1 (554/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (555/574) /content/v2.mp4: 736x1280 16.3ms
+video 1/1 (556/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (557/574) /content/v2.mp4: 736x1280 15.7ms
+video 1/1 (558/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (559/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (560/574) /content/v2.mp4: 736x1280 16.6ms
+video 1/1 (561/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (562/574) /content/v2.mp4: 736x1280 1 Handgun, 16.2ms
+video 1/1 (563/574) /content/v2.mp4: 736x1280 1 Handgun, 15.3ms
+video 1/1 (564/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (565/574) /content/v2.mp4: 736x1280 15.5ms
+video 1/1 (566/574) /content/v2.mp4: 736x1280 1 Handgun, 15.1ms
+video 1/1 (567/574) /content/v2.mp4: 736x1280 1 Handgun, 16.0ms
+video 1/1 (568/574) /content/v2.mp4: 736x1280 1 Handgun, 15.4ms
+video 1/1 (569/574) /content/v2.mp4: 736x1280 1 Handgun, 15.0ms
+video 1/1 (570/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (571/574) /content/v2.mp4: 736x1280 15.3ms
+video 1/1 (572/574) /content/v2.mp4: 736x1280 16.1ms
+video 1/1 (573/574) /content/v2.mp4: 736x1280 15.2ms
+video 1/1 (574/574) /content/v2.mp4: 736x1280 16.4ms
+Speed: 0.9ms pre-process, 16.1ms inference, 1.6ms postprocess per image at shape (1, 3, 1280, 1280)
+Results saved to runs/detect/predict
+
+import os
+
+# Get the current working directory
+current_dir = os.getcwd()
+
+# Save the model to a file
+torch.save(os.path.join(current_dir, 'runs/detect/train2'), 'my_model.pt')
+     
