@@ -1,0 +1,1447 @@
+
+Translate App
+The notebook demonstrates how to set up and use a pre-trained transformer model for translating text between different languages. It includes loading the model, encoding inputs, generating translations, and displaying the results.
+
+
+!pip install transformers sentencepiece datasets
+     
+
+from datasets import load_dataset
+from google.colab import drive
+from IPython.display import display
+from IPython.html import widgets
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import torch
+from torch import optim
+from torch.nn import functional as F
+from transformers import AdamW, AutoModelForSeq2SeqLM, AutoTokenizer
+from transformers import get_linear_schedule_with_warmup
+from tqdm import tqdm_notebook
+
+sns.set()
+     
+/usr/local/lib/python3.10/dist-packages/IPython/html.py:12: ShimWarning: The `IPython.html` package has been deprecated since IPython 4.0. You should import from `notebook` instead. `IPython.html.widgets` has moved to `ipywidgets`.
+  warn("The `IPython.html` package has been deprecated since IPython 4.0. "
+
+drive.mount('/content/gdrive')
+     
+Mounted at /content/gdrive
+
+# Use 'google/mt5-small' for non-pro cloab users
+model_repo = 'google/mt5-base'
+model_path = '/content/gdrive/My Drive/mt5_translation.pt'
+max_seq_len = 20
+     
+Load Tokenizer & Model
+
+
+tokenizer = AutoTokenizer.from_pretrained(model_repo)
+     
+/usr/local/lib/python3.10/dist-packages/huggingface_hub/utils/_token.py:89: UserWarning: 
+The secret `HF_TOKEN` does not exist in your Colab secrets.
+To authenticate with the Hugging Face Hub, create a token in your settings tab (https://huggingface.co/settings/tokens), set it as secret in your Google Colab and restart your session.
+You will be able to reuse this secret in all of your notebooks.
+Please note that authentication is recommended but still optional to access public models or datasets.
+  warnings.warn(
+tokenizer_config.json:   0%|          | 0.00/376 [00:00<?, ?B/s]
+/usr/local/lib/python3.10/dist-packages/huggingface_hub/file_download.py:1132: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+config.json:   0%|          | 0.00/702 [00:00<?, ?B/s]
+spiece.model:   0%|          | 0.00/4.31M [00:00<?, ?B/s]
+special_tokens_map.json:   0%|          | 0.00/65.0 [00:00<?, ?B/s]
+You are using the default legacy behaviour of the <class 'transformers.models.t5.tokenization_t5.T5Tokenizer'>. This is expected, and simply means that the `legacy` (previous) behavior will be used so nothing changes for you. If you want to use the new behaviour, set `legacy=False`. This should only be set if you understand what it means, and thoroughly read the reason why this was added as explained in https://github.com/huggingface/transformers/pull/24565
+/usr/local/lib/python3.10/dist-packages/transformers/convert_slow_tokenizer.py:560: UserWarning: The sentencepiece tokenizer that you are converting to a fast tokenizer uses the byte fallback option which is not implemented in the fast tokenizers. In practice this means that the fast version of the tokenizer can produce unknown tokens whereas the sentencepiece version would have converted these unknown tokens into a sequence of byte tokens matching the original piece of text.
+  warnings.warn(
+
+# Model description: https://huggingface.co/google/mt5-base
+model = AutoModelForSeq2SeqLM.from_pretrained(model_repo)
+model = model.cuda()
+     
+pytorch_model.bin:   0%|          | 0.00/2.33G [00:00<?, ?B/s]
+generation_config.json:   0%|          | 0.00/147 [00:00<?, ?B/s]
+
+token_ids = tokenizer.encode(
+    ' This will be translated to Japanese! (hopefully)',
+    return_tensors='pt').cuda()
+print(token_ids)
+
+model_out = model.generate(token_ids)
+print(model_out)
+
+output_text = tokenizer.convert_tokens_to_string(
+    tokenizer.convert_ids_to_tokens(model_out[0]))
+print(output_text)
+     
+tensor([[  1042,   3889,    669,   1494,    898,    390,  37194,    285,    288,
+          30865,    309,    274, 116024,  11994,    271,      1]],
+       device='cuda:0')
+/usr/local/lib/python3.10/dist-packages/transformers/generation/utils.py:1168: UserWarning: Using the model-agnostic default `max_length` (=20) to control the generation length. We recommend setting `max_new_tokens` to control the maximum length of the generation.
+  warnings.warn(
+tensor([[     0, 250099,    259,    264,    259, 228700,      1]],
+       device='cuda:0')
+<pad> <extra_id_0> - issuu</s>
+
+example_input_str = ' I am a Student'
+
+input_ids = tokenizer.encode(example_input_str, return_tensors='pt')
+print('Input IDs:', input_ids)
+
+tokens = tokenizer.convert_ids_to_tokens(input_ids[0])
+print('Tokens:', tokens)
+     
+Input IDs: tensor([[250101,    336,    728,    259,    262,  26976,      1]])
+Tokens: ['<jp>', '▁I', '▁am', '▁', 'a', '▁Student', '</s>']
+
+sorted(tokenizer.vocab.items(), key=lambda x: x[1])
+     
+[('<pad>', 0),
+ ('</s>', 1),
+ ('<unk>', 2),
+ ('<0x00>', 3),
+ ('<0x01>', 4),
+ ('<0x02>', 5),
+ ('<0x03>', 6),
+ ('<0x04>', 7),
+ ('<0x05>', 8),
+ ('<0x06>', 9),
+ ('<0x07>', 10),
+ ('<0x08>', 11),
+ ('<0x09>', 12),
+ ('<0x0A>', 13),
+ ('<0x0B>', 14),
+ ('<0x0C>', 15),
+ ('<0x0D>', 16),
+ ('<0x0E>', 17),
+ ('<0x0F>', 18),
+ ('<0x10>', 19),
+ ('<0x11>', 20),
+ ('<0x12>', 21),
+ ('<0x13>', 22),
+ ('<0x14>', 23),
+ ('<0x15>', 24),
+ ('<0x16>', 25),
+ ('<0x17>', 26),
+ ('<0x18>', 27),
+ ('<0x19>', 28),
+ ('<0x1A>', 29),
+ ('<0x1B>', 30),
+ ('<0x1C>', 31),
+ ('<0x1D>', 32),
+ ('<0x1E>', 33),
+ ('<0x1F>', 34),
+ ('<0x20>', 35),
+ ('<0x21>', 36),
+ ('<0x22>', 37),
+ ('<0x23>', 38),
+ ('<0x24>', 39),
+ ('<0x25>', 40),
+ ('<0x26>', 41),
+ ('<0x27>', 42),
+ ('<0x28>', 43),
+ ('<0x29>', 44),
+ ('<0x2A>', 45),
+ ('<0x2B>', 46),
+ ('<0x2C>', 47),
+ ('<0x2D>', 48),
+ ('<0x2E>', 49),
+ ('<0x2F>', 50),
+ ('<0x30>', 51),
+ ('<0x31>', 52),
+ ('<0x32>', 53),
+ ('<0x33>', 54),
+ ('<0x34>', 55),
+ ('<0x35>', 56),
+ ('<0x36>', 57),
+ ('<0x37>', 58),
+ ('<0x38>', 59),
+ ('<0x39>', 60),
+ ('<0x3A>', 61),
+ ('<0x3B>', 62),
+ ('<0x3C>', 63),
+ ('<0x3D>', 64),
+ ('<0x3E>', 65),
+ ('<0x3F>', 66),
+ ('<0x40>', 67),
+ ('<0x41>', 68),
+ ('<0x42>', 69),
+ ('<0x43>', 70),
+ ('<0x44>', 71),
+ ('<0x45>', 72),
+ ('<0x46>', 73),
+ ('<0x47>', 74),
+ ('<0x48>', 75),
+ ('<0x49>', 76),
+ ('<0x4A>', 77),
+ ('<0x4B>', 78),
+ ('<0x4C>', 79),
+ ('<0x4D>', 80),
+ ('<0x4E>', 81),
+ ('<0x4F>', 82),
+ ('<0x50>', 83),
+ ('<0x51>', 84),
+ ('<0x52>', 85),
+ ('<0x53>', 86),
+ ('<0x54>', 87),
+ ('<0x55>', 88),
+ ('<0x56>', 89),
+ ('<0x57>', 90),
+ ('<0x58>', 91),
+ ('<0x59>', 92),
+ ('<0x5A>', 93),
+ ('<0x5B>', 94),
+ ('<0x5C>', 95),
+ ('<0x5D>', 96),
+ ('<0x5E>', 97),
+ ('<0x5F>', 98),
+ ('<0x60>', 99),
+ ('<0x61>', 100),
+ ('<0x62>', 101),
+ ('<0x63>', 102),
+ ('<0x64>', 103),
+ ('<0x65>', 104),
+ ('<0x66>', 105),
+ ('<0x67>', 106),
+ ('<0x68>', 107),
+ ('<0x69>', 108),
+ ('<0x6A>', 109),
+ ('<0x6B>', 110),
+ ('<0x6C>', 111),
+ ('<0x6D>', 112),
+ ('<0x6E>', 113),
+ ('<0x6F>', 114),
+ ('<0x70>', 115),
+ ('<0x71>', 116),
+ ('<0x72>', 117),
+ ('<0x73>', 118),
+ ('<0x74>', 119),
+ ('<0x75>', 120),
+ ('<0x76>', 121),
+ ('<0x77>', 122),
+ ('<0x78>', 123),
+ ('<0x79>', 124),
+ ('<0x7A>', 125),
+ ('<0x7B>', 126),
+ ('<0x7C>', 127),
+ ('<0x7D>', 128),
+ ('<0x7E>', 129),
+ ('<0x7F>', 130),
+ ('<0x80>', 131),
+ ('<0x81>', 132),
+ ('<0x82>', 133),
+ ('<0x83>', 134),
+ ('<0x84>', 135),
+ ('<0x85>', 136),
+ ('<0x86>', 137),
+ ('<0x87>', 138),
+ ('<0x88>', 139),
+ ('<0x89>', 140),
+ ('<0x8A>', 141),
+ ('<0x8B>', 142),
+ ('<0x8C>', 143),
+ ('<0x8D>', 144),
+ ('<0x8E>', 145),
+ ('<0x8F>', 146),
+ ('<0x90>', 147),
+ ('<0x91>', 148),
+ ('<0x92>', 149),
+ ('<0x93>', 150),
+ ('<0x94>', 151),
+ ('<0x95>', 152),
+ ('<0x96>', 153),
+ ('<0x97>', 154),
+ ('<0x98>', 155),
+ ('<0x99>', 156),
+ ('<0x9A>', 157),
+ ('<0x9B>', 158),
+ ('<0x9C>', 159),
+ ('<0x9D>', 160),
+ ('<0x9E>', 161),
+ ('<0x9F>', 162),
+ ('<0xA0>', 163),
+ ('<0xA1>', 164),
+ ('<0xA2>', 165),
+ ('<0xA3>', 166),
+ ('<0xA4>', 167),
+ ('<0xA5>', 168),
+ ('<0xA6>', 169),
+ ('<0xA7>', 170),
+ ('<0xA8>', 171),
+ ('<0xA9>', 172),
+ ('<0xAA>', 173),
+ ('<0xAB>', 174),
+ ('<0xAC>', 175),
+ ('<0xAD>', 176),
+ ('<0xAE>', 177),
+ ('<0xAF>', 178),
+ ('<0xB0>', 179),
+ ('<0xB1>', 180),
+ ('<0xB2>', 181),
+ ('<0xB3>', 182),
+ ('<0xB4>', 183),
+ ('<0xB5>', 184),
+ ('<0xB6>', 185),
+ ('<0xB7>', 186),
+ ('<0xB8>', 187),
+ ('<0xB9>', 188),
+ ('<0xBA>', 189),
+ ('<0xBB>', 190),
+ ('<0xBC>', 191),
+ ('<0xBD>', 192),
+ ('<0xBE>', 193),
+ ('<0xBF>', 194),
+ ('<0xC0>', 195),
+ ('<0xC1>', 196),
+ ('<0xC2>', 197),
+ ('<0xC3>', 198),
+ ('<0xC4>', 199),
+ ('<0xC5>', 200),
+ ('<0xC6>', 201),
+ ('<0xC7>', 202),
+ ('<0xC8>', 203),
+ ('<0xC9>', 204),
+ ('<0xCA>', 205),
+ ('<0xCB>', 206),
+ ('<0xCC>', 207),
+ ('<0xCD>', 208),
+ ('<0xCE>', 209),
+ ('<0xCF>', 210),
+ ('<0xD0>', 211),
+ ('<0xD1>', 212),
+ ('<0xD2>', 213),
+ ('<0xD3>', 214),
+ ('<0xD4>', 215),
+ ('<0xD5>', 216),
+ ('<0xD6>', 217),
+ ('<0xD7>', 218),
+ ('<0xD8>', 219),
+ ('<0xD9>', 220),
+ ('<0xDA>', 221),
+ ('<0xDB>', 222),
+ ('<0xDC>', 223),
+ ('<0xDD>', 224),
+ ('<0xDE>', 225),
+ ('<0xDF>', 226),
+ ('<0xE0>', 227),
+ ('<0xE1>', 228),
+ ('<0xE2>', 229),
+ ('<0xE3>', 230),
+ ('<0xE4>', 231),
+ ('<0xE5>', 232),
+ ('<0xE6>', 233),
+ ('<0xE7>', 234),
+ ('<0xE8>', 235),
+ ('<0xE9>', 236),
+ ('<0xEA>', 237),
+ ('<0xEB>', 238),
+ ('<0xEC>', 239),
+ ('<0xED>', 240),
+ ('<0xEE>', 241),
+ ('<0xEF>', 242),
+ ('<0xF0>', 243),
+ ('<0xF1>', 244),
+ ('<0xF2>', 245),
+ ('<0xF3>', 246),
+ ('<0xF4>', 247),
+ ('<0xF5>', 248),
+ ('<0xF6>', 249),
+ ('<0xF7>', 250),
+ ('<0xF8>', 251),
+ ('<0xF9>', 252),
+ ('<0xFA>', 253),
+ ('<0xFB>', 254),
+ ('<0xFC>', 255),
+ ('<0xFD>', 256),
+ ('<0xFE>', 257),
+ ('<0xFF>', 258),
+ ('▁', 259),
+ ('.', 260),
+ (',', 261),
+ ('a', 262),
+ ('s', 263),
+ ('-', 264),
+ ('e', 265),
+ ('i', 266),
+ (':', 267),
+ ('o', 268),
+ ('▁de', 269),
+ ('t', 270),
+ (')', 271),
+ ('n', 272),
+ ('u', 273),
+ ('▁(', 274),
+ ('/', 275),
+ ('y', 276),
+ ("'", 277),
+ ('en', 278),
+ ('и', 279),
+ ('l', 280),
+ ('▁in', 281),
+ ('m', 282),
+ ('▁la', 283),
+ ('com', 284),
+ ('d', 285),
+ ('r', 286),
+ ('▁the', 287),
+ ('▁to', 288),
+ ('▁en', 289),
+ ('_', 290),
+ ('?', 291),
+ ('、', 292),
+ ('’', 293),
+ ('▁na', 294),
+ ('er', 295),
+ (';', 296),
+ ('c', 297),
+ ('▁A', 298),
+ ('es', 299),
+ ('▁v', 300),
+ ('▁di', 301),
+ ('...', 302),
+ ('▁se', 303),
+ ('▁of', 304),
+ ('▁and', 305),
+ ('。', 306),
+ ('▁|', 307),
+ ('а', 308),
+ ('!', 309),
+ ('▁на', 310),
+ ('"', 311),
+ ('(', 312),
+ ('▁"', 313),
+ ('k', 314),
+ ('▁в', 315),
+ ('b', 316),
+ ('▁c', 317),
+ ('g', 318),
+ ('▁que', 319),
+ ('▁S', 320),
+ ('an', 321),
+ ('▁–', 322),
+ ('▁www', 323),
+ ('е', 324),
+ ('p', 325),
+ ('▁m', 326),
+ ('▁sa', 327),
+ ('3', 328),
+ ('x', 329),
+ ('▁b', 330),
+ ('▁d', 331),
+ ('▁for', 332),
+ ('▁1', 333),
+ ('h', 334),
+ ('▁un', 335),
+ ('▁I', 336),
+ ('os', 337),
+ ('2', 338),
+ ('▁is', 339),
+ ('▁le', 340),
+ ('▁و', 341),
+ ('▁do', 342),
+ ('،', 343),
+ ('▁at', 344),
+ ('ed', 345),
+ ('te', 346),
+ ('ing', 347),
+ ('in', 348),
+ ('=', 349),
+ ('▁da', 350),
+ ('▁on', 351),
+ ('▁M', 352),
+ ('1', 353),
+ ('у', 354),
+ ('▁đ', 355),
+ ('▁2', 356),
+ ('A', 357),
+ ('as', 358),
+ ('▁“', 359),
+ ('z', 360),
+ ('é', 361),
+ ('▁el', 362),
+ ('▁P', 363),
+ ('▁B', 364),
+ ('”', 365),
+ ('▁T', 366),
+ ('f', 367),
+ ('de', 368),
+ ('à', 369),
+ ('ng', 370),
+ ('▁C', 371),
+ ('ar', 372),
+ ('▁og', 373),
+ ('▁за', 374),
+ ('▁no', 375),
+ ('ه', 376),
+ ('na', 377),
+ ('।', 378),
+ ('v', 379),
+ ('re', 380),
+ ('▁3', 381),
+ ('▁h', 382),
+ ('▁et', 383),
+ ('▁je', 384),
+ ('j', 385),
+ ('▁il', 386),
+ ('▁#', 387),
+ ('▁с', 388),
+ ('і', 389),
+ ('▁be', 390),
+ ('://', 391),
+ ('▁2018', 392),
+ ('▁per', 393),
+ ('▁th', 394),
+ ('▁si', 395),
+ ('я', 396),
+ ('▁z', 397),
+ ('▁die', 398),
+ ('S', 399),
+ ('▁te', 400),
+ ('▁не', 401),
+ ('▁ال', 402),
+ ('D', 403),
+ ('▁«', 404),
+ ('ne', 405),
+ ('ی', 406),
+ ('da', 407),
+ ('▁k', 408),
+ ('|', 409),
+ ('4', 410),
+ ('о', 411),
+ ('▁K', 412),
+ ('▁du', 413),
+ ('▁w', 414),
+ ('▁E', 415),
+ ('▁me', 416),
+ ('is', 417),
+ ('▁are', 418),
+ ('▁4', 419),
+ ('í', 420),
+ ('▁p', 421),
+ ('ta', 422),
+ ('の', 423),
+ ('C', 424),
+ ('▁по', 425),
+ ('▁del', 426),
+ ('▁ka', 427),
+ ('5', 428),
+ ('et', 429),
+ ('▁5', 430),
+ ('▁D', 431),
+ ('▁ja', 432),
+ ('ы', 433),
+ ('▁V', 434),
+ ('▁para', 435),
+ ('»', 436),
+ ('","', 437),
+ ('us', 438),
+ (']', 439),
+ ('▁al', 440),
+ ('▁N', 441),
+ ('▁der', 442),
+ ('▁O', 443),
+ ('on', 444),
+ ('ة', 445),
+ ('▁да', 446),
+ ('▁H', 447),
+ ('▁ne', 448),
+ ('8', 449),
+ ('▁con', 450),
+ ('6', 451),
+ ('B', 452),
+ ('▁er', 453),
+ ('ul', 454),
+ ('▁by', 455),
+ ('▁у', 456),
+ ('▁yang', 457),
+ ('▁L', 458),
+ ('▁De', 459),
+ ('0', 460),
+ ('▁an', 461),
+ ('ja', 462),
+ ('\xad', 463),
+ ('▁van', 464),
+ ('▁ה', 465),
+ ('▁za', 466),
+ ('】【', 467),
+ ('le', 468),
+ ('▁dan', 469),
+ ('em', 470),
+ ('á', 471),
+ ('▁und', 472),
+ ('al', 473),
+ ('è', 474),
+ ('▁10', 475),
+ ('to', 476),
+ ('ي', 477),
+ ('E', 478),
+ ('ka', 479),
+ ('▁...', 480),
+ ('w', 481),
+ ('▁på', 482),
+ (').', 483),
+ ('ly', 484),
+ ('▁po', 485),
+ ('▁The', 486),
+ ('7', 487),
+ ('":"', 488),
+ ('▁G', 489),
+ ('T', 490),
+ ('▁[', 491),
+ ('la', 492),
+ ('的', 493),
+ ('li', 494),
+ ('9', 495),
+ ('▁ma', 496),
+ ('▁0', 497),
+ ('▁des', 498),
+ ('▁med', 499),
+ ('▁til', 500),
+ ('▁La', 501),
+ ('kan', 502),
+ ('it', 503),
+ ('▁ki', 504),
+ ('no', 505),
+ ('),', 506),
+ ('м', 507),
+ ('َ', 508),
+ ('▁در', 509),
+ ('▁so', 510),
+ ('M', 511),
+ ('▁som', 512),
+ ('▁ke', 513),
+ ('▁with', 514),
+ ('▁F', 515),
+ ('ni', 516),
+ ('▁su', 517),
+ ('▁και', 518),
+ ('▁por', 519),
+ ('▁les', 520),
+ ('▁you', 521),
+ ('si', 522),
+ ('at', 523),
+ ('ti', 524),
+ ('id', 525),
+ ('▁av', 526),
+ ('▁as', 527),
+ ('▁ya', 528),
+ ('▁ve', 529),
+ ('▁den', 530),
+ ('▁R', 531),
+ ('▁ב', 532),
+ ('▁that', 533),
+ ('▁tr', 534),
+ ('は', 535),
+ ('が', 536),
+ ('do', 537),
+ ('N', 538),
+ ('ia', 539),
+ ('\\', 540),
+ ('ce', 541),
+ ('▁om', 542),
+ ('й', 543),
+ ('▁се', 544),
+ ('F', 545),
+ ('&', 546),
+ ('L', 547),
+ ('▁م', 548),
+ ('▁&', 549),
+ ('▁د', 550),
+ ('▁det', 551),
+ ('▁от', 552),
+ ('ó', 553),
+ ('▁به', 554),
+ ('▁pa', 555),
+ ('▁من', 556),
+ ('K', 557),
+ ('на', 558),
+ ('P', 559),
+ ('▁ha', 560),
+ ('V', 561),
+ ('▁ch', 562),
+ ('▁In', 563),
+ ('▁W', 564),
+ ('▁„', 565),
+ ('I', 566),
+ ('▁var', 567),
+ ('▁ni', 568),
+ ('se', 569),
+ ('▁6', 570),
+ ('ra', 571),
+ ('ل', 572),
+ ('▁una', 573),
+ ('を', 574),
+ ('▁في', 575),
+ ('▁ta', 576),
+ ('▁http', 577),
+ ('COM', 578),
+ ('am', 579),
+ ('ה', 580),
+ ('▁U', 581),
+ ('R', 582),
+ ('▁з', 583),
+ ('▁re', 584),
+ ('▁op', 585),
+ ('ن', 586),
+ ('т', 587),
+ ('▁har', 588),
+ ('ο', 589),
+ ('H', 590),
+ ('“', 591),
+ ('ek', 592),
+ ('▁ag', 593),
+ ('▁ng', 594),
+ ('▁los', 595),
+ ('{', 596),
+ ('▁och', 597),
+ ('▁2017', 598),
+ ('▁WWW', 599),
+ ('に', 600),
+ ('▁ku', 601),
+ ('ir', 602),
+ ('▁pe', 603),
+ ('un', 604),
+ ('х', 605),
+ ('um', 606),
+ ('▁2019', 607),
+ ('je', 608),
+ ('▁it', 609),
+ ('▁до', 610),
+ ('을', 611),
+ ('ʻ', 612),
+ ('www', 613),
+ ('▁ب', 614),
+ ('▁li', 615),
+ ('но', 616),
+ ('▁7', 617),
+ ('▁»', 618),
+ ('▁ir', 619),
+ ('▁kan', 620),
+ ('G', 621),
+ ('▁het', 622),
+ ('▁ho', 623),
+ ('▁par', 624),
+ ('▁vi', 625),
+ ('・', 626),
+ ('で', 627),
+ ('▁20', 628),
+ ('▁të', 629),
+ ('▁8', 630),
+ ('▁or', 631),
+ ('ا', 632),
+ ('م', 633),
+ ('ie', 634),
+ ('▁В', 635),
+ ('ت', 636),
+ ('ом', 637),
+ ('W', 638),
+ ('▁was', 639),
+ ('την', 640),
+ ('▁के', 641),
+ ('▁En', 642),
+ ('▁af', 643),
+ ('▁12', 644),
+ ('me', 645),
+ ('O', 646),
+ ('nya', 647),
+ ('ma', 648),
+ ('의', 649),
+ ('ki', 650),
+ ('▁cu', 651),
+ ('μ', 652),
+ ('▁No', 653),
+ ('▁2016', 654),
+ ('▁es', 655),
+ ('▁een', 656),
+ ('ки', 657),
+ ('▁mi', 658),
+ ('Ð', 659),
+ ('10', 660),
+ ('▁—', 661),
+ ('ku', 662),
+ ('":', 663),
+ ('▁J', 664),
+ ('px', 665),
+ ('일', 666),
+ ('▁ל', 667),
+ ('ни', 668),
+ ('>', 669),
+ ('▁15', 670),
+ ('▁‘', 671),
+ ('▁ver', 672),
+ ('▁um', 673),
+ ('▁man', 674),
+ ('▁ko', 675),
+ ('+', 676),
+ ('▁nh', 677),
+ ('η', 678),
+ ('ка', 679),
+ ('ny', 680),
+ ('α', 681),
+ ('▁od', 682),
+ ('▁wa', 683),
+ ('▁ge', 684),
+ ('ов', 685),
+ ('н', 686),
+ ('ten', 687),
+ ('▁С', 688),
+ ('▁מ', 689),
+ ('▁ph', 690),
+ ('▁>', 691),
+ ('▁men', 692),
+ ('▁ber', 693),
+ ('▁του', 694),
+ ('▁از', 695),
+ ('il', 696),
+ ('ch', 697),
+ ('▁bir', 698),
+ ('▁το', 699),
+ ('▁να', 700),
+ ('el', 701),
+ ('▁from', 702),
+ ('▁nu', 703),
+ ('ko', 704),
+ ('st', 705),
+ ('ë', 706),
+ ('▁lo', 707),
+ ('ủ', 708),
+ ('▁az', 709),
+ ('▁dem', 710),
+ ('mi', 711),
+ ('▁va', 712),
+ ('▁att', 713),
+ ('▁this', 714),
+ ('ur', 715),
+ ('▁nie', 716),
+ ('#', 717),
+ ('▁gi', 718),
+ ('▁tu', 719),
+ ('di', 720),
+ ('å', 721),
+ ('ات', 722),
+ ('or', 723),
+ ('▁em', 724),
+ ('と', 725),
+ ('ת', 726),
+ ('▁Na', 727),
+ ('▁am', 728),
+ ('▁из', 729),
+ ('▁11', 730),
+ ('▁pro', 731),
+ ('▁în', 732),
+ ('▁30', 733),
+ ('▁che', 734),
+ ('для', 735),
+ ('▁Z', 736),
+ ('ru', 737),
+ ('▁can', 738),
+ ('ya', 739),
+ ('▁ang', 740),
+ ('ai', 741),
+ ('▁f', 742),
+ ('ga', 743),
+ ('▁+', 744),
+ ('za', 745),
+ ('▁Se', 746),
+ ('이', 747),
+ ('ю', 748),
+ ('▁mit', 749),
+ ('ca', 750),
+ ('▁all', 751),
+ ('▁של', 752),
+ ('ke', 753),
+ ('",', 754),
+ ('°', 755),
+ ('▁tak', 756),
+ ('ने', 757),
+ ('▁bu', 758),
+ ('▁bo', 759),
+ ('▁zu', 760),
+ ('ą', 761),
+ ('ή', 762),
+ ('▁pour', 763),
+ ('▁Le', 764),
+ ('[', 765),
+ ('▁ت', 766),
+ ('▁ter', 767),
+ ('▁با', 768),
+ ('ci', 769),
+ ('▁és', 770),
+ ('co', 771),
+ ('▁your', 772),
+ ('om', 773),
+ ('▁9', 774),
+ ('▁کے', 775),
+ ('▁not', 776),
+ ('их', 777),
+ ('▁к', 778),
+ ('▁din', 779),
+ ('im', 780),
+ ('q', 781),
+ ('ă', 782),
+ ('▁have', 783),
+ ('▁mai', 784),
+ ('▁{', 785),
+ ('▁pre', 786),
+ ('▁we', 787),
+ ('▁Re', 788),
+ ('▁El', 789),
+ ('▁he', 790),
+ ('ς', 791),
+ ('▁•', 792),
+ ('và', 793),
+ ('Y', 794),
+ ('▁von', 795),
+ ('▁là', 796),
+ ('ې', 797),
+ ('▁ar', 798),
+ ('▁16', 799),
+ ('▁las', 800),
+ ('ú', 801),
+ ('app', 802),
+ ('▁کی', 803),
+ ('▁au', 804),
+ ('▁при', 805),
+ ('U', 806),
+ ('th', 807),
+ ('▁}', 808),
+ ('▁2014', 809),
+ ('▁ba', 810),
+ ('be', 811),
+ ('▁18', 812),
+ ('X', 813),
+ ('▁2015', 814),
+ ('▁2013', 815),
+ ('▁(1)', 816),
+ ('ой', 817),
+ ('▁14', 818),
+ ('▁qu', 819),
+ ('ِ', 820),
+ ('ha', 821),
+ ('▁می', 822),
+ ('man', 823),
+ ('▁met', 824),
+ ('are', 825),
+ ('▁nga', 826),
+ ('▁das', 827),
+ ('▁της', 828),
+ ('‘', 829),
+ ('▁है', 830),
+ ('ية', 831),
+ ('то', 832),
+ ('ь', 833),
+ ('va', 834),
+ ('ba', 835),
+ ('】', 836),
+ ('▁bi', 837),
+ ('日', 838),
+ ('한', 839),
+ ('▁24', 840),
+ ('ر', 841),
+ ('ى', 842),
+ ('▁est', 843),
+ ('▁में', 844),
+ ('lar', 845),
+ ('▁2012', 846),
+ ('▁dengan', 847),
+ ('年', 848),
+ ('▁13', 849),
+ ('▁με', 850),
+ ('▁untuk', 851),
+ ('▁Y', 852),
+ (');', 853),
+ ('▁ini', 854),
+ ('▁ש', 855),
+ ('▁ist', 856),
+ ('ve', 857),
+ ('▁ا', 858),
+ ('▁im', 859),
+ ('this', 860),
+ ('est', 861),
+ ('▁online', 862),
+ ('न', 863),
+ ('▁А', 864),
+ ('▁sur', 865),
+ ('J', 866),
+ ('▁У', 867),
+ ('ך', 868),
+ ('은', 869),
+ ('ado', 870),
+ ('▁ti', 871),
+ ('ہ', 872),
+ ('에', 873),
+ ('ri', 874),
+ ('▁för', 875),
+ ('tu', 876),
+ ('▁25', 877),
+ ('lo', 878),
+ ('」', 879),
+ ('den', 880),
+ ('%', 881),
+ ('▁א', 882),
+ ('د', 883),
+ ('▁את', 884),
+ ('▁có', 885),
+ ('▁pas', 886),
+ ('="', 887),
+ ('▁ein', 888),
+ ('ou', 889),
+ ('▁mu', 890),
+ ('月', 891),
+ ('▁что', 892),
+ ('ого', 893),
+ ('*', 894),
+ ('ի', 895),
+ ('ים', 896),
+ ('р', 897),
+ ('▁will', 898),
+ ('▁fa', 899),
+ ('net', 900),
+ ('▁για', 901),
+ ('д', 902),
+ ('ê', 903),
+ ('▁*', 904),
+ ('ُ', 905),
+ ('ada', 906),
+ ('▁qui', 907),
+ ('ới', 908),
+ ('г', 909),
+ ('▁over', 910),
+ ('▁17', 911),
+ ('▁από', 912),
+ ('ها', 913),
+ (',"', 914),
+ ('ā', 915),
+ ('▁را', 916),
+ ('▁со', 917),
+ ('та', 918),
+ ('▁ser', 919),
+ ('л', 920),
+ ('que', 921),
+ ('▁так', 922),
+ ('▁про', 923),
+ ('ể', 924),
+ ('ok', 925),
+ ('▁To', 926),
+ ('▁σ', 927),
+ ('▁და', 928),
+ ('가', 929),
+ ('ό', 930),
+ ('ción', 931),
+ ('ak', 932),
+ ('ị', 933),
+ ('▁که', 934),
+ ('▁non', 935),
+ ('ן', 936),
+ ('▁је', 937),
+ ('ro', 938),
+ ('「', 939),
+ ('ag', 940),
+ ('ان', 941),
+ ('على', 942),
+ ('▁आ', 943),
+ ('ите', 944),
+ ('да', 945),
+ ('с', 946),
+ ('▁się', 947),
+ ('▁€', 948),
+ ('▁mo', 949),
+ ('▁است', 950),
+ ('▁·', 951),
+ ('ý', 952),
+ ('▁این', 953),
+ ('Р', 954),
+ ('▁if', 955),
+ ('▁für', 956),
+ ('не', 957),
+ ('▁como', 958),
+ ('▁X', 959),
+ ('▁ca', 960),
+ ('▁är', 961),
+ ('ní', 962),
+ ('▁19', 963),
+ ('▁co', 964),
+ ('▁כ', 965),
+ ('▁100', 966),
+ ('ere', 967),
+ ('▁að', 968),
+ ('wa', 969),
+ ('▁cho', 970),
+ ('▁voor', 971),
+ ('▁2020', 972),
+ ('▁میں', 973),
+ ('و', 974),
+ ('▁की', 975),
+ ('ji', 976),
+ ('▁Đ', 977),
+ ('も', 978),
+ ('▁pri', 979),
+ ('▁este', 980),
+ ('▁2011', 981),
+ ('▁ce', 982),
+ ('▁О', 983),
+ ('▁է', 984),
+ ('ik', 985),
+ ('ት', 986),
+ ('▁21', 987),
+ ('는', 988),
+ ('ку', 989),
+ ('ж', 990),
+ ('ے', 991),
+ ('▁во', 992),
+ ('ç', 993),
+ ('ে', 994),
+ ('п', 995),
+ ('र', 996),
+ ('Z', 997),
+ ('▁од', 998),
+ ('▁ob', 999),
+ ...]
+
+# Source: https://huggingface.co/datasets/alt
+dataset = load_dataset('alt')
+     
+Downloading readme:   0%|          | 0.00/13.2k [00:00<?, ?B/s]
+Downloading data:   0%|          | 0.00/31.2M [00:00<?, ?B/s]
+Downloading data:   0%|          | 0.00/1.71M [00:00<?, ?B/s]
+Downloading data:   0%|          | 0.00/1.79M [00:00<?, ?B/s]
+Generating train split:   0%|          | 0/18088 [00:00<?, ? examples/s]
+Generating validation split:   0%|          | 0/1000 [00:00<?, ? examples/s]
+Generating test split:   0%|          | 0/1019 [00:00<?, ? examples/s]
+
+train_dataset = dataset['train']
+test_dataset = dataset['test']
+     
+
+train_dataset[0]
+     
+{'SNT.URLID': '80188',
+ 'SNT.URLID.SNTID': '1',
+ 'url': 'http://en.wikinews.org/wiki/2007_Rugby_World_Cup:_Italy_31_-_5_Portugal',
+ 'translation': {'bg': 'ফ্রান্সের প্যারিসের পার্ক দি প্রিন্সেস-এ হওয়া ২০০৭-এর রাগবি বিশ্বকাপের পুল সি-তে ইটালি পর্তুগালকে ৩১-৫ গোলে হারিয়েছে।',
+  'en': 'Italy have defeated Portugal 31-5 in Pool C of the 2007 Rugby World Cup at Parc des Princes, Paris, France.',
+  'en_tok': 'Italy have defeated Portugal 31-5 in Pool C of the 2007 Rugby World Cup at Parc des Princes , Paris , France .',
+  'fil': 'Natalo ng Italya ang Portugal sa puntos na 31-5 sa Grupong C noong 2007 sa Pandaigdigang laro ng Ragbi sa Parc des Princes, Paris, France.',
+  'hi': '2007 में फ़्रांस, पेरिस के पार्क डेस प्रिंसेस में हुए रग्बी विश्व कप के पूल C में इटली ने पुर्तगाल को 31-5 से हराया।',
+  'id': 'Italia berhasil mengalahkan Portugal 31-5 di grup C dalam Piala Dunia Rugby 2007 di Parc des Princes, Paris, Perancis.',
+  'ja': 'フランスのパリ、パルク・デ・プランスで行われた2007年ラグビーワールドカップのプールCで、イタリアは31対5でポルトガルを下した。',
+  'khm': 'អ៊ីតាលីបានឈ្នះលើព័រទុយហ្គាល់ 31-5 ក្នុងប៉ូលCនៃពីធីប្រកួតពានរង្វាន់ពិភពលោកនៃកីឡាបាល់ឱបឆ្នាំ2007ដែលប្រព្រឹត្តនៅប៉ាសឌេសប្រីន ក្រុងប៉ារីស បារាំង។',
+  'lo': 'ອິຕາລີໄດ້ເສຍໃຫ້ປ໊ອກຕຸຍການ 31 ຕໍ່ 5 ໃນພູລ C ຂອງ ການແຂ່ງຂັນຣັກບີ້ລະດັບໂລກປີ 2007 ທີ່ ປາກເດແພຣັງ ປາຣີ ປະເທດຝຣັ່ງ.',
+  'ms': 'Itali telah mengalahkan Portugal 31-5 dalam Pool C pada Piala Dunia Ragbi 2007 di Parc des Princes, Paris, Perancis.',
+  'my': 'ပြင်သစ်နိုင်ငံ ပါရီမြို့ ပါ့ဒက်စ် ပရင့်စက် ၌ ၂၀၀၇ခုနှစ် ရပ်ဘီ ကမ္ဘာ့ ဖလား တွင် အီတလီ သည် ပေါ်တူဂီ ကို ၃၁-၅ ဂိုး ဖြင့် ရေကူးကန် စီ တွင် ရှုံးနိမ့်သွားပါသည် ။',
+  'th': 'อิตาลีได้เอาชนะโปรตุเกสด้วยคะแนน31ต่อ5 ในกลุ่มc ของการแข่งขันรักบี้เวิลด์คัพปี2007 ที่สนามปาร์กเดแพร็งส์ ที่กรุงปารีส ประเทศฝรั่งเศส',
+  'vi': 'Ý đã đánh bại Bồ Đào Nha với tỉ số 31-5 ở Bảng C Giải vô địch Rugby thế giới 2007 tại Parc des Princes, Pari, Pháp.',
+  'zh': '意大利在法国巴黎王子公园体育场举办的2007年橄榄球世界杯C组以31-5击败葡萄牙。'}}
+
+LANG_TOKEN_MAPPING = {
+    'en': '',
+    'ja': '',
+    'zh': ''
+}
+     
+
+special_tokens_dict = {'additional_special_tokens': list(LANG_TOKEN_MAPPING.values())}
+tokenizer.add_special_tokens(special_tokens_dict)
+model.resize_token_embeddings(len(tokenizer))
+     
+Embedding(250103, 768)
+
+token_ids = tokenizer.encode(
+    example_input_str, return_tensors='pt', padding='max_length',
+    truncation=True, max_length=max_seq_len)
+print(token_ids)
+
+tokens = tokenizer.convert_ids_to_tokens(token_ids[0])
+print(tokens)
+     
+tensor([[250101,   1494,    339,   1627,    259,    262,   2978,    259,    272,
+           1982,   1315,    260,      1,      0,      0,      0,      0,      0,
+              0,      0]])
+['<jp>', '▁This', '▁is', '▁just', '▁', 'a', '▁test', '▁', 'n', 'bu', 'ig', '.', '</s>', '<pad>', '<pad>', '<pad>', '<pad>', '<pad>', '<pad>', '<pad>']
+
+def encode_input_str(text, target_lang, tokenizer, seq_len,
+                     lang_token_map=LANG_TOKEN_MAPPING):
+  target_lang_token = lang_token_map[target_lang]
+
+  # Tokenize and add special tokens
+  input_ids = tokenizer.encode(
+      text = target_lang_token + text,
+      return_tensors = 'pt',
+      padding = 'max_length',
+      truncation = True,
+      max_length = seq_len)
+
+  return input_ids[0]
+
+def encode_target_str(text, tokenizer, seq_len,
+                      lang_token_map=LANG_TOKEN_MAPPING):
+  token_ids = tokenizer.encode(
+      text = text,
+      return_tensors = 'pt',
+      padding = 'max_length',
+      truncation = True,
+      max_length = seq_len)
+
+  return token_ids[0]
+
+def format_translation_data(translations, lang_token_map,
+                            tokenizer, seq_len=128):
+  # Choose a random 2 languages for in i/o
+  langs = list(lang_token_map.keys())
+  input_lang, target_lang = np.random.choice(langs, size=2, replace=False)
+
+  # Get the translations for the batch
+  input_text = translations[input_lang]
+  target_text = translations[target_lang]
+
+  if input_text is None or target_text is None:
+    return None
+
+  input_token_ids = encode_input_str(
+      input_text, target_lang, tokenizer, seq_len, lang_token_map)
+
+  target_token_ids = encode_target_str(
+      target_text, tokenizer, seq_len, lang_token_map)
+
+  return input_token_ids, target_token_ids
+
+def transform_batch(batch, lang_token_map, tokenizer):
+  inputs = []
+  targets = []
+  for translation_set in batch['translation']:
+    formatted_data = format_translation_data(
+        translation_set, lang_token_map, tokenizer, max_seq_len)
+
+    if formatted_data is None:
+      continue
+
+    input_ids, target_ids = formatted_data
+    inputs.append(input_ids.unsqueeze(0))
+    targets.append(target_ids.unsqueeze(0))
+
+  batch_input_ids = torch.cat(inputs).cuda()
+  batch_target_ids = torch.cat(targets).cuda()
+
+  return batch_input_ids, batch_target_ids
+
+def get_data_generator(dataset, lang_token_map, tokenizer, batch_size=32):
+  dataset = dataset.shuffle()
+  for i in range(0, len(dataset), batch_size):
+    raw_batch = dataset[i:i+batch_size]
+    yield transform_batch(raw_batch, lang_token_map, tokenizer)
+     
+
+# Testing `data_transform`
+in_ids, out_ids = format_translation_data(
+    train_dataset[0]['translation'], LANG_TOKEN_MAPPING, tokenizer)
+
+print(' '.join(tokenizer.convert_ids_to_tokens(in_ids)))
+print(' '.join(tokenizer.convert_ids_to_tokens(out_ids)))
+
+# Testing data generator
+data_gen = get_data_generator(train_dataset, LANG_TOKEN_MAPPING, tokenizer, 8)
+data_batch = next(data_gen)
+print('Input shape:', data_batch[0].shape)
+print('Output shape:', data_batch[1].shape)
+     
+<en> ▁ 意大利 在 法国 巴黎 王子 公园 体育 场 举办 的 2007 年 橄 榄 球 世界杯 C 组 以 3 1-5 击 败 葡萄 牙 。 </s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+▁Italy ▁have ▁de feat ed ▁Portugal ▁3 1-5 ▁in ▁Pool ▁C ▁of ▁the ▁2007 ▁ Rugby ▁World ▁Cup ▁at ▁Parc ▁des ▁Princes , ▁Paris , ▁France . </s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+Input shape: torch.Size([8, 20])
+Output shape: torch.Size([8, 20])
+Train BERT
+
+
+# Constants
+n_epochs = 1
+batch_size = 16
+print_freq = 50
+checkpoint_freq = 1000
+lr = 5e-4
+n_batches = int(np.ceil(len(train_dataset) / batch_size))
+total_steps = n_epochs * n_batches
+n_warmup_steps = int(total_steps * 0.01)
+     
+
+# Optimizer
+optimizer = AdamW(model.parameters(), lr=lr)
+scheduler = get_linear_schedule_with_warmup(
+    optimizer, n_warmup_steps, total_steps)
+     
+
+losses = []
+     
+
+def eval_model(model, gdataset, max_iters=8):
+  test_generator = get_data_generator(gdataset, LANG_TOKEN_MAPPING,
+                                      tokenizer, batch_size)
+  eval_losses = []
+  for i, (input_batch, label_batch) in enumerate(test_generator):
+    if i >= max_iters:
+      break
+
+    model_out = model.forward(
+        input_ids = input_batch,
+        labels = label_batch)
+    eval_losses.append(model_out.loss.item())
+
+  return np.mean(eval_losses)
+     
+
+for epoch_idx in range(n_epochs):
+  # Randomize data order
+  data_generator = get_data_generator(train_dataset, LANG_TOKEN_MAPPING,
+                                      tokenizer, batch_size)
+
+  for batch_idx, (input_batch, label_batch) \
+      in tqdm_notebook(enumerate(data_generator), total=n_batches):
+    optimizer.zero_grad()
+
+    # Forward pass
+    model_out = model.forward(
+        input_ids = input_batch,
+        labels = label_batch)
+
+    # Calculate loss and update weights
+    loss = model_out.loss
+    losses.append(loss.item())
+    loss.backward()
+    optimizer.step()
+    scheduler.step()
+
+    # Print training update info
+    if (batch_idx + 1) % print_freq == 0:
+      avg_loss = np.mean(losses[-print_freq:])
+      print('Epoch: {} | Step: {} | Avg. loss: {:.3f} | lr: {}'.format(
+          epoch_idx+1, batch_idx+1, avg_loss, scheduler.get_last_lr()[0]))
+
+    if (batch_idx + 1) % checkpoint_freq == 0:
+      test_loss = eval_model(model, test_dataset)
+      print('Saving model with test loss of {:.3f}'.format(test_loss))
+      torch.save(model.state_dict(), model_path)
+
+torch.save(model.state_dict(), model_path)
+     
+<ipython-input-27-9682a3c86c07>:7: TqdmDeprecationWarning: This function will be removed in tqdm==5.0.0
+Please use `tqdm.notebook.tqdm` instead of `tqdm.tqdm_notebook`
+  in tqdm_notebook(enumerate(data_generator), total=n_batches):
+  0%|          | 0/1131 [00:00<?, ?it/s]
+Epoch: 1 | Step: 50 | Avg. loss: 2.585 | lr: 0.00048258928571428574
+Epoch: 1 | Step: 100 | Avg. loss: 2.591 | lr: 0.0004602678571428571
+Epoch: 1 | Step: 150 | Avg. loss: 2.562 | lr: 0.0004379464285714286
+Epoch: 1 | Step: 200 | Avg. loss: 2.703 | lr: 0.00041562500000000003
+Epoch: 1 | Step: 250 | Avg. loss: 2.721 | lr: 0.0003933035714285714
+Epoch: 1 | Step: 300 | Avg. loss: 2.705 | lr: 0.0003709821428571429
+Epoch: 1 | Step: 350 | Avg. loss: 2.852 | lr: 0.0003486607142857143
+Epoch: 1 | Step: 400 | Avg. loss: 2.844 | lr: 0.0003263392857142857
+Epoch: 1 | Step: 450 | Avg. loss: 2.653 | lr: 0.00030401785714285714
+Epoch: 1 | Step: 500 | Avg. loss: 2.454 | lr: 0.00028169642857142857
+Epoch: 1 | Step: 550 | Avg. loss: 2.577 | lr: 0.000259375
+Epoch: 1 | Step: 600 | Avg. loss: 2.489 | lr: 0.00023705357142857143
+Epoch: 1 | Step: 650 | Avg. loss: 2.505 | lr: 0.00021473214285714284
+Epoch: 1 | Step: 700 | Avg. loss: 2.439 | lr: 0.0001924107142857143
+Epoch: 1 | Step: 750 | Avg. loss: 2.548 | lr: 0.00017008928571428573
+Epoch: 1 | Step: 800 | Avg. loss: 2.488 | lr: 0.00014776785714285714
+Epoch: 1 | Step: 850 | Avg. loss: 2.421 | lr: 0.00012544642857142857
+Epoch: 1 | Step: 900 | Avg. loss: 2.380 | lr: 0.000103125
+Epoch: 1 | Step: 950 | Avg. loss: 2.423 | lr: 8.080357142857143e-05
+Epoch: 1 | Step: 1000 | Avg. loss: 2.392 | lr: 5.848214285714286e-05
+Saving model with test loss of 2.709
+Epoch: 1 | Step: 1050 | Avg. loss: 2.342 | lr: 3.616071428571429e-05
+Epoch: 1 | Step: 1100 | Avg. loss: 2.319 | lr: 1.3839285714285714e-05
+
+#Loss
+window_size = 50
+smoothed_losses = []
+for i in range(len(losses)-window_size):
+  smoothed_losses.append(np.mean(losses[i:i+window_size]))
+
+plt.plot(smoothed_losses[100:])
+     
+[<matplotlib.lines.Line2D at 0x7fe78c091ff0>]
+
+
+#Manual Testing
+test_sentence = test_dataset[0]['translation']['en']
+print('Raw input text:', test_sentence)
+
+input_ids = encode_input_str(
+    text = test_sentence,
+    target_lang = 'ja',
+    tokenizer = tokenizer,
+    seq_len = model.config.max_length,
+    lang_token_map = LANG_TOKEN_MAPPING)
+input_ids = input_ids.unsqueeze(0).cuda()
+
+print('Truncated input text:', tokenizer.convert_tokens_to_string(
+    tokenizer.convert_ids_to_tokens(input_ids[0])))
+     
+Raw input text: It has been confirmed that eight thoroughbred race horses at Randwick Racecourse in Sydney have been infected with equine influenza.
+Truncated input text: <jp> It has been confirmed that eight thoroughbred race horses at Randwick Racecourse</s>
+
+output_tokens = model.generate(input_ids, num_beams=10, num_return_sequences=3)
+# print(output_tokens)
+for token_set in output_tokens:
+  print(tokenizer.decode(token_set, skip_special_tokens=True))
+     
+ランディック・レースコースで8頭のトロピカル・レースが行われた。
+ランディック・レースコースで8頭のハイブリド・レースのレースは、
+ランディック・レースコースで8頭のトロピカル・レースが行われたと確認
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+     
+
+#@title Slick Blue Translate
+input_text = 'I am a Good student' #@param {type:"string"}
+output_language = 'ja' #@param ["en", "ja", "zh"]
+
+input_ids = encode_input_str(
+    text = input_text,
+    target_lang = output_language,
+    tokenizer = tokenizer,
+    seq_len = model.config.max_length,
+    lang_token_map = LANG_TOKEN_MAPPING)
+input_ids = input_ids.unsqueeze(0).cuda()
+
+output_tokens = model.generate(input_ids, num_beams=20, length_penalty=0.2)
+print(input_text + '  ->  ' + \
+      tokenizer.decode(output_tokens[0], skip_special_tokens=True))
+     
+I am a Good student  ->  「私は良い学生だ。」
